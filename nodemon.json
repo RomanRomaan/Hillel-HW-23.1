@@ -1,0 +1,13 @@
+{
+    "watch": [
+        "server"
+    ],
+    "ext": "mjs js json",
+    "ignore": [
+        "script.js",
+        "index.html",
+        "main.css",
+        "node_modules/*"
+    ],
+    "exec": "node ./server/index.mjs"
+}
