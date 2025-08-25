@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/Hillel-HW-20.1/main.css">
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>ToDoList</h1>
+        <form class="form js--form">
+            <input type="text" name="value" required class="form__input js--form__input">
+            <button type="button" class="form__btn">Додати</button>
+        </form>
+        <ul class="js--todos-wrapper">
+            <li class="todo-item">
+                <input type="checkbox">
+                <span class="todo-item__description">Text</span>
+                <button class="todo-item__delete">Видалити</button>
+            </li>
+            <li class="todo-item todo-item--checked">
+                <input type="checkbox">
+                <span class="todo-item__description">Text</span>
+                <button class="todo-item__delete">Видалити</button>
+            </li>
+        </ul>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ваше завдання</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрити</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
