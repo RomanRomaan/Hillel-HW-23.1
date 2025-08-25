@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '..')));
 
 // Подключение к локальной MongoDB
-const mongoUrl = 'mongodb://localhost:27017/mydatabase';
+const mongoUrl = 'mongodb+srv://romanfindjob:Nbqb7kGbUguMc3vq@cluster0.kcctlew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoUrl);
 mongoose.connection.on('open', () => console.log('Mongo DB is connected'));
 mongoose.connection.on('error', err => console.log('Mongo DB is failed', err));
