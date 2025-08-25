@@ -1,3 +1,9 @@
+// ===== где лежит API =====
+const IS_GITHUB_PAGES = /github\.io$/i.test(window.location.hostname);
+const API_BASE = IS_GITHUB_PAGES
+    ? 'https://todo-api-odd3.onrender.com' // прод: Render
+    : '';                                   // локально: тот же origin (http://localhost:5555)
+
 // --------- DOM Elements ---------
 const formEl = document.querySelector('.form.js--form');
 const addButtonEl = document.querySelector('.form__btn');
@@ -10,44 +16,40 @@ const taskModal = new bootstrap.Modal(taskModalEl);
 const taskModalBodyEl = taskModalEl.querySelector('.modal-body');
 
 // --------- In-memory state ---------
-let todoItems = []; // массив объектов: { _id, title, isDone }
+let todoItems = []; // { _id, title, isDone }
 
 // --------- API Client ---------
 const TodoAPI = {
     async getAll() {
-        const response = await fetch('/api/todos');
+        const response = await fetch(`${API_BASE}/api/todos`);
         if (!response.ok) throw new Error('Не вдалося завантажити список');
-        const items = await response.json();
-        return items;
+        return response.json();
     },
 
     async create(title) {
-        const response = await fetch('/api/todos', {
+        const response = await fetch(`${API_BASE}/api/todos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, isDone: false })
         });
         if (!response.ok) throw new Error('Не вдалося створити задачу');
-        const createdItem = await response.json();
-        return createdItem;
+        return response.json();
     },
 
     async update(id, patch) {
-        const response = await fetch(`/api/todos/${id}`, {
+        const response = await fetch(`${API_BASE}/api/todos/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(patch)
         });
         if (!response.ok) throw new Error('Не вдалося оновити задачу');
-        const updatedItem = await response.json();
-        return updatedItem;
+        return response.json();
     },
 
     async remove(id) {
-        const response = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE}/api/todos/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Не вдалося видалити задачу');
-        const result = await response.json();
-        return result;
+        return response.json();
     }
 };
 
