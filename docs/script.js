@@ -100,6 +100,12 @@ addButtonEl.addEventListener('click', async (event) => {
         addButtonEl.disabled = false;
     }
 });
+inputEl.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addButtonEl.click();
+    }
+});
 
 // Delegation: toggle / delete / open modal
 listEl.addEventListener('click', async (event) => {
