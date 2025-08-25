@@ -1,3 +1,4 @@
+// server/index.mjs
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -8,50 +9,93 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Раздаём фронт из корня проекта (index.html, script.js, main.css)
+// ---- статические файлы (index.html, script.js, main.css) из корня проекта ----
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '..')));
 
-// ===== MongoDB Atlas =====
-// РЕКОМЕНДОВАНО: хранить строку в переменной окружения MONGODB_URI
-const mongoUrl =
-    process.env.MONGODB_URI ||
+// ===================== MongoDB Atlas =====================
+/**
+ * РЕКОМЕНДУЕМЫЙ способ — хранить строку в ENV:
+ *   PowerShell (сессия):  $env:MONGODB_URI="mongodb+srv://user:pass@cluster0.../mydatabase?retryWrites=true&w=majority&appName=Cluster0"
+ *   Потом:                npm run dev
+ *
+ * На время отладки ниже есть atlasUri — подставь свои user/pass при необходимости.
+ */
+const atlasUri =
     'mongodb+srv://romanfindjob:Nbqb7kGbUguMc3vq@cluster0.kcctlew.mongodb.net/mydatabase?retryWrites=true&w=majority&appName=Cluster0';
 
-mongoose.connect(mongoUrl);
-mongoose.connection.on('open', () => console.log('Mongo DB is connected'));
-mongoose.connection.on('error', err => console.log('Mongo DB is failed', err));
+// Если в ENV задано — используем его, иначе atlasUri сверху
+const mongoUrl = process.env.MONGODB_URI || atlasUri;
 
-// ===== Модель Todo =====
-const { Schema, model } = mongoose;
-const todoSchema = new Schema({
-    title: { type: String, required: true },
-    isDone: { type: Boolean, default: false }
+// Логируем, что именно берем (без пароля)
+try {
+    const u = new URL(mongoUrl);
+    console.log('Using URI → host:', u.host, 'db:', u.pathname || '/');
+} catch (e) {
+    console.warn('Could not parse mongo URI for log:', e?.message);
+}
+
+// Подключение. Явно укажем имя БД через dbName (на случай, если в URI его нет/меняют).
+await mongoose.connect(mongoUrl, { dbName: 'mydatabaseQunik' });
+
+// Логи успешного коннекта + имя БД из драйвера
+mongoose.connection.once('open', () => {
+    const dbName = mongoose.connection.db?.databaseName;
+    console.log('✅ Connected to MongoDB');
+    console.log('   Driver DB name:', dbName);
 });
+mongoose.connection.on('error', err => console.error('❌ Mongo error:', err));
+
+// ===================== Модель Todo =====================
+const { Schema, model } = mongoose;
+const todoSchema = new Schema(
+    {
+        title: { type: String, required: true, trim: true },
+        isDone: { type: Boolean, default: false }
+    },
+    { timestamps: true }
+);
 const Todo = model('Todo', todoSchema);
 
-// ===== CRUD =====
+// ===================== CRUD API =====================
+
+// Read all
 app.get('/api/todos', async (req, res, next) => {
-    try { res.json(await Todo.find().lean()); } catch (e) { next(e); }
-});
-
-app.post('/api/todos', async (req, res, next) => {
-    try { res.status(201).json(await Todo.create(req.body)); } catch (e) { next(e); }
-});
-
-app.put('/api/todos/:id', async (req, res, next) => {
     try {
-        const doc = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!doc) return res.status(404).json({ error: 'Not found' });
-        res.json(doc);
+        const items = await Todo.find().sort({ createdAt: -1 }).lean();
+        res.json(items);
     } catch (e) { next(e); }
 });
 
+// Create
+app.post('/api/todos', async (req, res, next) => {
+    try {
+        const { title, isDone } = req.body || {};
+        if (!title) return res.status(400).json({ error: 'title is required' });
+        const created = await Todo.create({ title, isDone });
+        res.status(201).json(created);
+    } catch (e) { next(e); }
+});
+
+// Update
+app.put('/api/todos/:id', async (req, res, next) => {
+    try {
+        const updated = await Todo.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!updated) return res.status(404).json({ error: 'Not found' });
+        res.json(updated);
+    } catch (e) { next(e); }
+});
+
+// Delete
 app.delete('/api/todos/:id', async (req, res, next) => {
     try {
-        const doc = await Todo.findByIdAndDelete(req.params.id);
-        if (!doc) return res.status(404).json({ error: 'Not found' });
+        const deleted = await Todo.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: 'Not found' });
         res.json({ ok: true });
     } catch (e) { next(e); }
 });
@@ -60,7 +104,9 @@ app.delete('/api/todos/:id', async (req, res, next) => {
 app.use((err, req, res, next) => {
     console.error('ERR:', err);
     if (res.headersSent) return next(err);
-    res.status(500).json({ error: err.message || 'Server error' });
+    res.status(500).json({ error: err?.message || 'Server error' });
 });
 
-app.listen(5555, () => console.log('Server started at 5555'));
+// Старт сервера
+const PORT = process.env.PORT || 5555;
+app.listen(PORT, () => console.log(`Server started at ${PORT}`));
