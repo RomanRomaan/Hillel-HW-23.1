@@ -15,13 +15,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '..')));
 
 // ===================== MongoDB Atlas =====================
-/**
- * РЕКОМЕНДУЕМЫЙ способ — хранить строку в ENV:
- *   PowerShell (сессия):  $env:MONGODB_URI="mongodb+srv://user:pass@cluster0.../mydatabase?retryWrites=true&w=majority&appName=Cluster0"
- *   Потом:                npm run dev
- *
- * На время отладки ниже есть atlasUri — подставь свои user/pass при необходимости.
- */
+
 const atlasUri =
     'mongodb+srv://romanfindjob:Nbqb7kGbUguMc3vq@cluster0.kcctlew.mongodb.net/mydatabase?retryWrites=true&w=majority&appName=Cluster0';
 
