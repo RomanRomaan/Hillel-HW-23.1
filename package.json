@@ -1,31 +1,16 @@
 {
   "name": "hillel-hw-23.1",
   "version": "1.0.0",
-  "main": "script.js",
-  "description": "",
-  "author": "",
-  "license": "ISC",
+  "type": "module",
+  "scripts": {
+    "start": "node ./server/index.mjs"
+  },
   "dependencies": {
-    "bootstrap": "^5.3.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mongoose": "^8.18.0"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
-  },
-  "scripts": {
-    "start": "node ./server/index.mjs",
-    "dev": "nodemon --watch ./server --ext mjs,js,json --exec \"node ./server/index.mjs\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RomanRomaan/Hillel-HW-23.1.git"
-  },
-  "bugs": {
-    "url": "https://github.com/RomanRomaan/Hillel-HW-23.1/issues"
-  },
-  "homepage": "https://github.com/RomanRomaan/Hillel-HW-23.1#readme",
-  "keywords": []
+  "engines": {
+    "node": "22.x"
+  }
 }
