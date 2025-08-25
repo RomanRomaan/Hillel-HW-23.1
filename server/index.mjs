@@ -6,23 +6,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const app = express();
-app.use(cors());
+
+// ---------- middleware ----------
+app.use(cors());                // при желании сузить до GitHub Pages
 app.use(express.json());
 
-// ---- статические файлы (index.html, script.js, main.css) из корня проекта ----
+// ---------- static: раздаём папку client ----------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..', 'client')));
 
 // ===================== MongoDB Atlas =====================
-
+// Можно вынести в ENV: MONGODB_URI="mongodb+srv://.../mydatabase?..."
 const atlasUri =
     'mongodb+srv://romanfindjob:Nbqb7kGbUguMc3vq@cluster0.kcctlew.mongodb.net/mydatabase?retryWrites=true&w=majority&appName=Cluster0';
 
-// Если в ENV задано — используем его, иначе atlasUri сверху
 const mongoUrl = process.env.MONGODB_URI || atlasUri;
 
-// Логируем, что именно берем (без пароля)
+// лог: покажем, к какому хосту/БД будем коннектиться (без пароля)
 try {
     const u = new URL(mongoUrl);
     console.log('Using URI → host:', u.host, 'db:', u.pathname || '/');
@@ -30,10 +31,9 @@ try {
     console.warn('Could not parse mongo URI for log:', e?.message);
 }
 
-// Подключение. Явно укажем имя БД через dbName (на случай, если в URI его нет/меняют).
-await mongoose.connect(mongoUrl, { dbName: 'mydatabaseQunik' });
+// коннектимся (имя БД берём из URI: /mydatabase)
+await mongoose.connect(mongoUrl);
 
-// Логи успешного коннекта + имя БД из драйвера
 mongoose.connection.once('open', () => {
     const dbName = mongoose.connection.db?.databaseName;
     console.log('✅ Connected to MongoDB');
@@ -59,7 +59,7 @@ app.get('/api/todos', async (req, res, next) => {
     try {
         const items = await Todo.find().sort({ createdAt: -1 }).lean();
         res.json(items);
-    } catch (e) { next(e); }
+    } catch (err) { next(err); }
 });
 
 // Create
@@ -69,7 +69,7 @@ app.post('/api/todos', async (req, res, next) => {
         if (!title) return res.status(400).json({ error: 'title is required' });
         const created = await Todo.create({ title, isDone });
         res.status(201).json(created);
-    } catch (e) { next(e); }
+    } catch (err) { next(err); }
 });
 
 // Update
@@ -82,7 +82,7 @@ app.put('/api/todos/:id', async (req, res, next) => {
         );
         if (!updated) return res.status(404).json({ error: 'Not found' });
         res.json(updated);
-    } catch (e) { next(e); }
+    } catch (err) { next(err); }
 });
 
 // Delete
@@ -91,7 +91,18 @@ app.delete('/api/todos/:id', async (req, res, next) => {
         const deleted = await Todo.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ error: 'Not found' });
         res.json({ ok: true });
-    } catch (e) { next(e); }
+    } catch (err) { next(err); }
+});
+
+// Диагностика: куда подключены и сколько документов
+app.get('/api/where', async (req, res) => {
+    const info = {
+        readyState: mongoose.connection.readyState,             // 1 = connected
+        dbName: mongoose.connection.db?.databaseName || null,
+        uriHost: (() => { try { return new URL(mongoUrl).host; } catch { return null; } })(),
+        count: await Todo.countDocuments()
+    };
+    res.json(info);
 });
 
 // Глобальный обработчик ошибок
@@ -101,6 +112,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err?.message || 'Server error' });
 });
 
-// Старт сервера
+// ---------- start ----------
 const PORT = process.env.PORT || 5555;
 app.listen(PORT, () => console.log(`Server started at ${PORT}`));
